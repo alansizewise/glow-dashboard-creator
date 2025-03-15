@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { ChartContainer } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { defaultChartConfig } from "@/components/ui/chart-config";
@@ -235,9 +235,21 @@ const SizeHeatmapSection = ({ filters }: SizeHeatmapSectionProps) => {
                   left: 20,
                 }}
               >
-                <CartesianGrid />
-                <XAxis type="number" dataKey="x" name={xLabel} unit="cm" />
-                <YAxis type="number" dataKey="y" name={yLabel} unit="cm" />
+                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                <XAxis 
+                  type="number" 
+                  dataKey="x" 
+                  name={xLabel} 
+                  unit="cm" 
+                  stroke="hsl(var(--border))"
+                />
+                <YAxis 
+                  type="number" 
+                  dataKey="y" 
+                  name={yLabel} 
+                  unit="cm" 
+                  stroke="hsl(var(--border))"
+                />
                 <Tooltip 
                   cursor={{ strokeDasharray: '3 3' }}
                   content={({ active, payload }) => {
@@ -264,8 +276,16 @@ const SizeHeatmapSection = ({ filters }: SizeHeatmapSectionProps) => {
                     return null;
                   }}
                 />
-                <Scatter name="Male" data={scatterData.filter(d => d.z === 'M')} fill="#3b82f6" />
-                <Scatter name="Female" data={scatterData.filter(d => d.z === 'F')} fill="#ec4899" />
+                <Scatter 
+                  name="Male" 
+                  data={scatterData.filter(d => d.z === 'M')} 
+                  fill="#3b82f6" 
+                />
+                <Scatter 
+                  name="Female" 
+                  data={scatterData.filter(d => d.z === 'F')} 
+                  fill="#ec4899" 
+                />
               </ScatterChart>
             </ChartContainer>
           )}

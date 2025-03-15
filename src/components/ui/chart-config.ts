@@ -3,27 +3,15 @@ import { ChartConfig } from "@/components/ui/chart";
 
 export const defaultChartConfig: ChartConfig = {
   grid: {
-    stroke: "hsl(var(--border))",
-    strokeWidth: 1,
+    color: "hsl(var(--border))"
   },
-  x: {
-    axisLine: {
-      stroke: "hsl(var(--border))",
-      strokeWidth: 1,
-    },
-    ticks: {
-      stroke: "hsl(var(--border))",
-      strokeWidth: 1,
-    },
+  xAxis: {
+    color: "hsl(var(--border))"
   },
-  y: {
-    axisLine: {
-      stroke: "hsl(var(--border))",
-      strokeWidth: 1,
-    },
-    ticks: {
-      stroke: "hsl(var(--border))",
-      strokeWidth: 1,
-    },
+  yAxis: {
+    color: "hsl(var(--border))"
   },
+  tooltip: {
+    label: "Data point"
+  }
 };

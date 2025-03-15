@@ -254,7 +254,7 @@ const ScanSection = ({ filters }: ScanSectionProps) => {
                 data={currentData}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey={aggregation === 'daily' ? "date" : "dateRange"} 
                   tickFormatter={(value) => {
@@ -263,8 +263,9 @@ const ScanSection = ({ filters }: ScanSectionProps) => {
                     }
                     return value.split(' to ')[0];
                   }}
+                  stroke="hsl(var(--border))"
                 />
-                <YAxis />
+                <YAxis stroke="hsl(var(--border))" />
                 <Tooltip 
                   labelFormatter={(value) => {
                     if (aggregation === 'daily') {
@@ -310,12 +311,13 @@ const ScanSection = ({ filters }: ScanSectionProps) => {
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" stroke="hsl(var(--border))" />
                 <YAxis 
                   dataKey="location" 
                   type="category" 
                   width={120}
+                  stroke="hsl(var(--border))"
                 />
                 <Tooltip />
                 <Legend />
