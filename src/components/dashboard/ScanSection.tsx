@@ -1,26 +1,23 @@
 
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useEffect, useState } from "react";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  Tooltip,
+  XAxis,
+  YAxis,
+  BarChart,
+  Bar,
+  ResponsiveContainer,
+} from "recharts";
+import { format, parseISO, startOfWeek, endOfWeek } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useEffect, useState } from "react";
-
-// Mock data for demonstration
-const mockScanData = [
-  { record_date: '2023-01-05', scan_count: 42, successful_scan_count: 38, geolocation: 'New York, US' },
-  { record_date: '2023-01-12', scan_count: 53, successful_scan_count: 45, geolocation: 'Los Angeles, US' },
-  { record_date: '2023-01-19', scan_count: 37, successful_scan_count: 32, geolocation: 'Chicago, US' },
-  { record_date: '2023-01-26', scan_count: 65, successful_scan_count: 58, geolocation: 'Miami, US' },
-  { record_date: '2023-02-02', scan_count: 48, successful_scan_count: 44, geolocation: 'Boston, US' },
-  { record_date: '2023-02-09', scan_count: 72, successful_scan_count: 67, geolocation: 'Seattle, US' },
-  { record_date: '2023-02-16', scan_count: 59, successful_scan_count: 51, geolocation: 'Denver, US' },
-  { record_date: '2023-02-23', scan_count: 63, successful_scan_count: 60, geolocation: 'Austin, US' },
-  { record_date: '2023-03-02', scan_count: 51, successful_scan_count: 48, geolocation: 'Philadelphia, US' },
-  { record_date: '2023-03-09', scan_count: 68, successful_scan_count: 64, geolocation: 'San Francisco, US' },
-  { record_date: '2023-03-16', scan_count: 74, successful_scan_count: 69, geolocation: 'Portland, US' },
-  { record_date: '2023-03-23', scan_count: 47, successful_scan_count: 43, geolocation: 'Atlanta, US' },
-];
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChartContainer } from "@/components/ui/chart";
+import { defaultChartConfig } from "@/components/ui/chart-config";
 
 interface ScanSectionProps {
   filters: {
@@ -34,29 +31,149 @@ interface ScanSectionProps {
   };
 }
 
+// Mock data generator
+const generateMockData = () => {
+  const mockData = [];
+  const startDate = new Date(2023, 0, 1);
+  const endDate = new Date(2023, 11, 31);
+  
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const scanCount = Math.floor(Math.random() * 40) + 10;
+    const successRate = Math.random() * 0.3 + 0.7; // 70-100% success rate
+    
+    mockData.push({
+      date: new Date(d),
+      scanCount,
+      successfulScanCount: Math.floor(scanCount * successRate),
+      geolocation: ['London, UK', 'Manchester, UK', 'Birmingham, UK', 'Edinburgh, UK', 'Glasgow, UK'][Math.floor(Math.random() * 5)]
+    });
+  }
+  
+  return mockData;
+};
+
+const mockScanData = generateMockData();
+
+// Function to filter mock data based on provided filters
+const filterMockData = (data: any[], filters: ScanSectionProps['filters']) => {
+  const startDate = new Date(filters.startDate);
+  const endDate = new Date(filters.endDate);
+  
+  return data.filter(item => {
+    const itemDate = new Date(item.date);
+    return itemDate >= startDate && itemDate <= endDate;
+  });
+};
+
+// Function to aggregate data by day
+const aggregateDataByDay = (data: any[]) => {
+  const aggregated = data.reduce((acc, item) => {
+    const dateStr = format(new Date(item.date), 'yyyy-MM-dd');
+    
+    if (!acc[dateStr]) {
+      acc[dateStr] = {
+        date: dateStr,
+        scanCount: 0,
+        successfulScanCount: 0,
+      };
+    }
+    
+    acc[dateStr].scanCount += item.scanCount;
+    acc[dateStr].successfulScanCount += item.successfulScanCount;
+    
+    return acc;
+  }, {});
+  
+  return Object.values(aggregated).sort((a: any, b: any) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+};
+
+// Function to aggregate data by week
+const aggregateDataByWeek = (data: any[]) => {
+  const aggregated = data.reduce((acc, item) => {
+    const date = new Date(item.date);
+    const weekStart = format(startOfWeek(date), 'yyyy-MM-dd');
+    const weekEnd = format(endOfWeek(date), 'yyyy-MM-dd');
+    const weekKey = `${weekStart} to ${weekEnd}`;
+    
+    if (!acc[weekKey]) {
+      acc[weekKey] = {
+        dateRange: weekKey,
+        scanCount: 0,
+        successfulScanCount: 0,
+      };
+    }
+    
+    acc[weekKey].scanCount += item.scanCount;
+    acc[weekKey].successfulScanCount += item.successfulScanCount;
+    
+    return acc;
+  }, {});
+  
+  return Object.values(aggregated);
+};
+
+// Function to calculate top locations
+const calculateTopLocations = (data: any[]) => {
+  const locationMap = data.reduce((acc, item) => {
+    const location = item.geolocation;
+    
+    if (!acc[location]) {
+      acc[location] = {
+        location,
+        scanCount: 0,
+        successfulScanCount: 0,
+      };
+    }
+    
+    acc[location].scanCount += item.scanCount;
+    acc[location].successfulScanCount += item.successfulScanCount;
+    
+    return acc;
+  }, {});
+  
+  return Object.values(locationMap)
+    .sort((a: any, b: any) => b.scanCount - a.scanCount)
+    .slice(0, 5);
+};
+
 const ScanSection = ({ filters }: ScanSectionProps) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [scanData, setScanData] = useState<any[]>([]);
-  const isMobile = useIsMobile();
-
-  // Calculate summary stats
-  const totalScans = scanData.reduce((sum, item) => sum + item.scan_count, 0);
-  const totalSuccessfulScans = scanData.reduce((sum, item) => sum + item.successful_scan_count, 0);
-  const successRate = totalScans > 0 ? (totalSuccessfulScans / totalScans * 100).toFixed(1) : '0';
-
-  // Simulate data fetching
+  const [dailyData, setDailyData] = useState<any[]>([]);
+  const [weeklyData, setWeeklyData] = useState<any[]>([]);
+  const [topLocations, setTopLocations] = useState<any[]>([]);
+  const [successRate, setSuccessRate] = useState<number>(0);
+  const [aggregation, setAggregation] = useState<'daily' | 'weekly'>('daily');
+  
   useEffect(() => {
     setIsLoading(true);
-    // In a real app, this would be an API call using the filters
+    
+    // Simulate API fetch delay
     setTimeout(() => {
-      setScanData(mockScanData);
+      const filteredData = filterMockData(mockScanData, filters);
+      const aggregatedDaily = aggregateDataByDay(filteredData);
+      const aggregatedWeekly = aggregateDataByWeek(filteredData);
+      const locations = calculateTopLocations(filteredData);
+      
+      const totalScans = filteredData.reduce((sum, item) => sum + item.scanCount, 0);
+      const successfulScans = filteredData.reduce((sum, item) => sum + item.successfulScanCount, 0);
+      const rate = totalScans > 0 ? (successfulScans / totalScans) * 100 : 0;
+      
+      setDailyData(aggregatedDaily);
+      setWeeklyData(aggregatedWeekly);
+      setTopLocations(locations);
+      setSuccessRate(rate);
       setIsLoading(false);
     }, 1000);
+    
   }, [filters]);
-
+  
+  const currentData = aggregation === 'daily' ? dailyData : weeklyData;
+  
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Scans</CardTitle>
@@ -65,7 +182,9 @@ const ScanSection = ({ filters }: ScanSectionProps) => {
             {isLoading ? (
               <Skeleton className="h-8 w-20" />
             ) : (
-              <div className="text-2xl font-bold">{totalScans}</div>
+              <div className="text-2xl font-bold">
+                {currentData.reduce((sum: number, item: any) => sum + item.scanCount, 0)}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -77,7 +196,9 @@ const ScanSection = ({ filters }: ScanSectionProps) => {
             {isLoading ? (
               <Skeleton className="h-8 w-20" />
             ) : (
-              <div className="text-2xl font-bold">{totalSuccessfulScans}</div>
+              <div className="text-2xl font-bold">
+                {currentData.reduce((sum: number, item: any) => sum + item.successfulScanCount, 0)}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -89,125 +210,125 @@ const ScanSection = ({ filters }: ScanSectionProps) => {
             {isLoading ? (
               <Skeleton className="h-8 w-20" />
             ) : (
-              <div className="text-2xl font-bold">{successRate}%</div>
+              <div className="text-2xl font-bold">{successRate.toFixed(1)}%</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Scanning Locations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div className="text-2xl font-bold">{topLocations.length}</div>
             )}
           </CardContent>
         </Card>
       </div>
-
+      
       <Card>
         <CardHeader>
-          <CardTitle>Scan Activity Over Time</CardTitle>
+          <CardTitle>Scan Activity</CardTitle>
           <CardDescription>
-            Number of scans and successful scans by date
+            Overview of scanning activity over time
           </CardDescription>
+          <Tabs 
+            value={aggregation} 
+            onValueChange={(value) => setAggregation(value as 'daily' | 'weekly')}
+            className="mt-4"
+          >
+            <TabsList>
+              <TabsTrigger value="daily">Daily</TabsTrigger>
+              <TabsTrigger value="weekly">Weekly</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <Skeleton className="h-[350px] w-full" />
           ) : (
-            <ChartContainer
-              className="h-[350px]"
-              config={{
-                total: { label: "Total Scans", color: "#10b981" },
-                successful: { label: "Successful Scans", color: "#3b82f6" },
-              }}
-            >
-              <AreaChart
-                data={scanData}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            <ChartContainer className="h-[350px]" config={defaultChartConfig}>
+              <LineChart
+                data={currentData}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
-                <defs>
-                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorSuccess" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="record_date"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => value.split('-').slice(1).join('/')}
-                />
-                <YAxis tick={{ fontSize: 12 }} />
                 <CartesianGrid strokeDasharray="3 3" />
-                <ChartTooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="rounded-lg border bg-background p-2 shadow-sm">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="font-medium">{data.record_date}</div>
-                            <div className="font-medium">{data.geolocation}</div>
-                            <div className="flex items-center gap-1">
-                              <div className="h-2 w-2 rounded-full bg-[#10b981]" />
-                              <span>Total: {data.scan_count}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <div className="h-2 w-2 rounded-full bg-[#3b82f6]" />
-                              <span>Success: {data.successful_scan_count}</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
+                <XAxis 
+                  dataKey={aggregation === 'daily' ? "date" : "dateRange"} 
+                  tickFormatter={(value) => {
+                    if (aggregation === 'daily') {
+                      return format(new Date(value), 'MMM dd');
                     }
-                    return null;
+                    return value.split(' to ')[0];
                   }}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="scan_count"
-                  name="total"
-                  stroke="#10b981"
-                  fillOpacity={1}
-                  fill="url(#colorTotal)"
+                <YAxis />
+                <Tooltip 
+                  labelFormatter={(value) => {
+                    if (aggregation === 'daily') {
+                      return format(new Date(value), 'MMMM dd, yyyy');
+                    }
+                    return value;
+                  }}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="successful_scan_count"
-                  name="successful"
-                  stroke="#3b82f6"
-                  fillOpacity={1}
-                  fill="url(#colorSuccess)"
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="scanCount" 
+                  name="Total Scans"
+                  stroke="#3b82f6" 
+                  activeDot={{ r: 8 }} 
                 />
-              </AreaChart>
+                <Line 
+                  type="monotone" 
+                  dataKey="successfulScanCount" 
+                  name="Successful Scans"
+                  stroke="#10b981" 
+                />
+              </LineChart>
             </ChartContainer>
           )}
         </CardContent>
       </Card>
-
+      
       <Card>
         <CardHeader>
-          <CardTitle>Scans by Location</CardTitle>
+          <CardTitle>Top Scanning Locations</CardTitle>
           <CardDescription>
-            Distribution of scans across different locations
+            Locations with the highest scan volumes
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <Skeleton className="h-[350px] w-full" />
           ) : (
-            <ChartContainer className="h-[350px]">
-              <BarChart 
-                data={scanData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+            <ChartContainer className="h-[350px]" config={defaultChartConfig}>
+              <BarChart
+                data={topLocations}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="geolocation" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={70} 
-                  tick={{ fontSize: isMobile ? 8 : 12 }}
+                <XAxis type="number" />
+                <YAxis 
+                  dataKey="location" 
+                  type="category" 
+                  width={120}
                 />
-                <YAxis />
                 <Tooltip />
-                <Bar dataKey="scan_count" name="Total Scans" fill="#10b981" />
-                <Bar dataKey="successful_scan_count" name="Successful Scans" fill="#3b82f6" />
+                <Legend />
+                <Bar 
+                  dataKey="scanCount" 
+                  name="Total Scans" 
+                  fill="#3b82f6" 
+                />
+                <Bar 
+                  dataKey="successfulScanCount" 
+                  name="Successful Scans" 
+                  fill="#10b981" 
+                />
               </BarChart>
             </ChartContainer>
           )}

@@ -6,6 +6,7 @@ import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Responsive
 import { ChartContainer } from "@/components/ui/chart";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { defaultChartConfig } from "@/components/ui/chart-config";
 
 // Mock data for demonstration
 const generateHeatmapData = () => {
@@ -225,7 +226,7 @@ const SizeHeatmapSection = ({ filters }: SizeHeatmapSectionProps) => {
           {isLoading ? (
             <Skeleton className="h-[450px] w-full" />
           ) : (
-            <ChartContainer className="h-[450px]">
+            <ChartContainer className="h-[450px]" config={defaultChartConfig}>
               <ScatterChart
                 margin={{
                   top: 20,
@@ -283,7 +284,7 @@ const SizeHeatmapSection = ({ filters }: SizeHeatmapSectionProps) => {
             {isLoading ? (
               <Skeleton className="h-[300px] w-full" />
             ) : (
-              <ChartContainer className="h-[300px]">
+              <ChartContainer className="h-[300px]" config={defaultChartConfig}>
                 <ScatterChart
                   margin={{
                     top: 20,
