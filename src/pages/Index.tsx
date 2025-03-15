@@ -5,6 +5,7 @@ import DashboardFilters from "@/components/dashboard/DashboardFilters";
 import ScanSection from "@/components/dashboard/ScanSection";
 import RecommendationSection from "@/components/dashboard/RecommendationSection";
 import SizeHeatmapSection from "@/components/dashboard/SizeHeatmapSection";
+import MapSection from "@/components/dashboard/MapSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 
@@ -38,6 +39,7 @@ const Index = () => {
             <TabsTrigger value="scans">Scans</TabsTrigger>
             <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
             <TabsTrigger value="heatmap">Size Heatmap</TabsTrigger>
+            <TabsTrigger value="map">Map</TabsTrigger>
           </TabsList>
           
           <TabsContent value="scans">
@@ -50,6 +52,10 @@ const Index = () => {
           
           <TabsContent value="heatmap">
             <SizeHeatmapSection filters={filters} />
+          </TabsContent>
+          
+          <TabsContent value="map">
+            <MapSection filters={filters} />
           </TabsContent>
         </Tabs>
       </main>
