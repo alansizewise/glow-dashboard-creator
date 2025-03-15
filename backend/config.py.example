@@ -2,5 +2,18 @@
 # Rename this file to config.py and update with your database connection details
 
 DB_CONFIG = {
-    'DATABASE_CONNECTION_STRING': 'DRIVER={SQL Server};SERVER=your_server;DATABASE=your_database;UID=your_username;PWD=your_password'
+    # Choose connection type: 'pyodbc', 'pymssql', or 'sqlite'
+    'CONNECTION_TYPE': 'sqlite',  # Default to SQLite for easy setup
+    
+    # For SQL Server with pyodbc:
+    'CONNECTION_STRING': 'DRIVER={SQL Server};SERVER=your_server;DATABASE=your_database;UID=your_username;PWD=your_password',
+    
+    # For SQL Server with pymssql:
+    'SERVER': 'your_server',
+    'DATABASE': 'your_database',
+    'USERNAME': 'your_username',
+    'PASSWORD': 'your_password',
+    
+    # For SQLite:
+    'SQLITE_PATH': 'foot_scan_data.db'  # Path to SQLite database file
 }

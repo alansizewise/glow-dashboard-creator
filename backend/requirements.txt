@@ -1,4 +1,9 @@
 
 flask==2.0.1
 flask-cors==3.0.10
-pyodbc==4.0.32
+# SQL Server connection options
+# Option 1: pyodbc (requires ODBC drivers)
+# pyodbc==4.0.32
+# Option 2: pymssql (alternative for SQL Server connections)
+pymssql==2.2.8
+# SQLite for local development (no installation requirements)
