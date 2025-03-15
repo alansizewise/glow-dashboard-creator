@@ -1,0 +1,6 @@
+
+# Rename this file to config.py and update with your database connection details
+
+DB_CONFIG = {
+    'DATABASE_CONNECTION_STRING': 'DRIVER={SQL Server};SERVER=your_server;DATABASE=your_database;UID=your_username;PWD=your_password'
+}

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,23 +6,22 @@ import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { defaultChartConfig } from "@/components/ui/chart-config";
+import { useToast } from "@/components/ui/use-toast";
 
-// Mock data for demonstration
 const generateHeatmapData = () => {
   const data = [];
   for (let i = 0; i < 100; i++) {
     const gender = Math.random() > 0.5 ? 'M' : 'F';
     const age = Math.floor(Math.random() * 60) + 10;
     
-    // Generate foot measurements based on gender
     let footLength, footWidth;
     
     if (gender === 'M') {
-      footLength = (Math.random() * 4) + 24; // 24-28cm
-      footWidth = (Math.random() * 1.5) + 9; // 9-10.5cm
+      footLength = (Math.random() * 4) + 24;
+      footWidth = (Math.random() * 1.5) + 9;
     } else {
-      footLength = (Math.random() * 3) + 22; // 22-25cm
-      footWidth = (Math.random() * 1.5) + 8; // 8-9.5cm
+      footLength = (Math.random() * 3) + 22;
+      footWidth = (Math.random() * 1.5) + 8;
     }
     
     data.push({
@@ -59,30 +57,71 @@ const SizeHeatmapSection = ({ filters }: SizeHeatmapSectionProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [heatmapData, setHeatmapData] = useState<any[]>([]);
   const [selectedMeasurement, setSelectedMeasurement] = useState<string>("length_width");
+  const [useRealData, setUseRealData] = useState(true);
+  const { toast } = useToast();
 
-  // Simulate data fetching
   useEffect(() => {
     setIsLoading(true);
-    // In a real app, this would be an API call using the filters
-    setTimeout(() => {
-      let filteredData = [...mockHeatmapData];
-      
-      // Apply gender filter
-      if (filters.gender !== 'ALL') {
-        filteredData = filteredData.filter(item => item.gender === filters.gender);
+    
+    const fetchData = async () => {
+      try {
+        const backendFilters = {
+          start_date: filters.startDate,
+          end_date: filters.endDate,
+          tenant_id: filters.tenantId,
+          country_code: filters.countryCode,
+          min_age: filters.minAge,
+          max_age: filters.maxAge,
+          gender: filters.gender
+        };
+        
+        const response = await fetch('http://localhost:5000/size_heatmap_data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(backendFilters),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch data');
+        }
+        
+        const responseData = await response.json();
+        
+        const formattedData = responseData.chart_data.map((item: any) => ({
+          id: item.roundscan,
+          age: item.age,
+          gender: item.gender === 'MALE' ? 'M' : item.gender === 'FEMALE' ? 'F' : 'O',
+          foot_length: item.foot_length * 10,
+          foot_width: item.foot_width * 10,
+          foot_ih: item.foot_ih * 10,
+          foot_heel_ball: item.foot_heel_ball * 10,
+          foot_girth: item.foot_girth * 10,
+          geolocation: item.geolocation
+        }));
+        
+        setHeatmapData(formattedData);
+        setUseRealData(true);
+      } catch (error) {
+        console.error("Error fetching size heatmap data:", error);
+        toast({
+          title: "Data Fetch Error",
+          description: "Using mock data instead. Please check your backend connection.",
+          variant: "destructive"
+        });
+        
+        setHeatmapData(mockHeatmapData);
+        setUseRealData(false);
+      } finally {
+        setIsLoading(false);
       }
-      
-      // Apply age filter
-      filteredData = filteredData.filter(
-        item => item.age >= filters.minAge && item.age <= filters.maxAge
-      );
-      
-      setHeatmapData(filteredData);
-      setIsLoading(false);
-    }, 1000);
-  }, [filters]);
+    };
+    
+    fetchData();
+  }, [filters, toast]);
 
-  // Calculate summary stats
   const maleFeet = heatmapData.filter(item => item.gender === 'M').length;
   const femaleFeet = heatmapData.filter(item => item.gender === 'F').length;
   const averageLength = heatmapData.length > 0 
@@ -92,7 +131,6 @@ const SizeHeatmapSection = ({ filters }: SizeHeatmapSectionProps) => {
     ? (heatmapData.reduce((sum, item) => sum + item.foot_width, 0) / heatmapData.length).toFixed(1)
     : '0';
 
-  // Get the data for the selected measurement
   const getScatterData = () => {
     switch (selectedMeasurement) {
       case 'length_width':
@@ -152,6 +190,13 @@ const SizeHeatmapSection = ({ filters }: SizeHeatmapSectionProps) => {
 
   return (
     <div className="space-y-6">
+      {!useRealData && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded" role="alert">
+          <p className="font-bold">Note:</p>
+          <p>Using mock data. Please ensure your Flask backend is running at http://localhost:5000</p>
+        </div>
+      )}
+      
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

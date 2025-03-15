@@ -1,69 +1,65 @@
-# Welcome to your Lovable project
 
-## Project info
+# Foot Scanning Analytics Dashboard
 
-**URL**: https://lovable.dev/projects/808ce91e-c72a-4fc8-b499-c316ebc8a726
+## Project Overview
+This is a dashboard application for visualizing foot scanning analytics data. It provides:
+- Scan activity visualization and mapping
+- Recommendation tracking and analysis
+- Size heatmap visualization with demographic breakdowns
 
-## How can I edit this code?
+## Technical Stack
+- **Frontend**: React, TypeScript, Recharts, shadcn/ui, Tailwind CSS
+- **Backend**: Flask with pyodbc for SQL Server connections
 
-There are several ways of editing your application.
+## Installation and Setup
 
-**Use Lovable**
+### Frontend Setup
+1. Clone this repository:
+   ```sh
+   git clone <your-repository-url>
+   cd <repository-directory>
+   ```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/808ce91e-c72a-4fc8-b499-c316ebc8a726) and start prompting.
+2. Install dependencies:
+   ```sh
+   npm install
+   ```
 
-Changes made via Lovable will be committed automatically to this repo.
+3. Start the development server:
+   ```sh
+   npm run dev
+   ```
 
-**Use your preferred IDE**
+### Backend Setup
+1. Make sure you have Python installed (3.8+ recommended)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. Navigate to the backend directory (create it if it doesn't exist):
+   ```sh
+   cd backend
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3. Install Flask and required packages:
+   ```sh
+   pip install flask pyodbc
+   ```
 
-Follow these steps:
+4. Create a config.py file with your database connection:
+   ```python
+   DB_CONFIG = {
+       'DATABASE_CONNECTION_STRING': 'DRIVER={SQL Server};SERVER=your_server;DATABASE=your_database;UID=your_username;PWD=your_password'
+   }
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+5. Start the Flask server:
+   ```sh
+   python app.py
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Configuration
+- The frontend makes API calls to the backend endpoints at `/data`, `/recommendation_data`, and `/size_heatmap_data`
+- Ensure both frontend and backend are running for the application to work properly
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/808ce91e-c72a-4fc8-b499-c316ebc8a726) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+## Development
+- Frontend runs on port 8080 by default (http://localhost:8080)
+- Backend runs on port 5000 by default (http://localhost:5000)
+- Make sure CORS is properly configured if running on different domains
